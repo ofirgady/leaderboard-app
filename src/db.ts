@@ -1,7 +1,7 @@
 import { Pool } from 'pg';
 import dotenv from 'dotenv';
 
-dotenv.config();
+dotenv.config(); // Load environment variables from .env file
 
 const pool = new Pool({
   user: process.env.DB_USER,
@@ -11,4 +11,4 @@ const pool = new Pool({
   port: Number(process.env.DB_PORT),
 });
 
-export default pool;
+export default pool; // Export the database connection pool
