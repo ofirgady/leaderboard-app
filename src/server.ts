@@ -105,7 +105,9 @@ app.get('/getUserWithNeighbors/:id', async (req, res) => {
 });
 
 // Start the server
-const PORT = 3000;
-app.listen(PORT, () => {
+const PORT = process.env.PORT || 3000;
+const server = app.listen(PORT, () => {
 	console.log(`Server running on http://localhost:${PORT}`);
 });
+
+export { app, server };
