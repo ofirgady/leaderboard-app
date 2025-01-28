@@ -14,16 +14,21 @@ export const loggerService = {
   },
   error(...args: unknown[]) {
     doLog('ERROR', ...args);
-  }
+  },
 };
 
 // Directory for log files (use absolute path)
 const logsDir = path.resolve(__dirname, '../logs');
 if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir, { recursive: true }); // Ensure parent directories are created
+  try {
+    fs.mkdirSync(logsDir, { recursive: true }); // Create directory if not exists
+    console.log(`Logs directory created at ${logsDir}`);
+  } catch (err) {
+    console.error('FATAL: Cannot create logs directory', err);
+  }
 }
 
-// Function to get current time in the desired format
+// Function to get the current time in the desired format
 function getTime(): string {
   const now = new Date();
   return now.toLocaleString('he');
@@ -37,7 +42,7 @@ function isError(e: unknown): e is Error {
 // Core logging function
 function doLog(level: string, ...args: unknown[]): void {
   // Map arguments to strings or JSON
-  const strs = args.map(arg => 
+  const strs = args.map(arg =>
     typeof arg === 'string' || isError(arg) ? arg : JSON.stringify(arg)
   );
 
@@ -51,6 +56,8 @@ function doLog(level: string, ...args: unknown[]): void {
   // Append to log file
   const logFilePath = path.join(logsDir, 'backend.log');
   fs.appendFile(logFilePath, line, (err) => {
-    if (err) console.error('FATAL: cannot write to log file', err);
+    if (err) {
+      console.error('FATAL: cannot write to log file', err);
+    }
   });
 }
