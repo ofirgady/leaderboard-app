@@ -3,6 +3,20 @@ import { userRepository } from '../repositories/user.repository';
 import { loggerService } from '../services/logger.service';
 
 /**
+ * Checks if the server is running.
+ * @param req - Express request object.
+ * @param res - Express response object.
+ */
+export const checkServerStatus = async (req: Request, res: Response): Promise<void> => {
+	try {
+		loggerService.info('Checking server status');
+		res.status(200).send('Leaderboard API is running!');
+	} catch (error: any) {
+		loggerService.error('Error checking server status', { error: error.message });
+		res.status(500).json({ error: 'Error checking server status' });
+	}
+};
+/**
  * Adds a new user to the database.
  * @param req - Express request object, containing username, score, and optional img_url in the body.
  * @param res - Express response object.

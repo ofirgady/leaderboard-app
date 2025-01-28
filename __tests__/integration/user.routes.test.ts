@@ -3,18 +3,15 @@ import { app, server } from '../../src/server';
 import pool from '../../src/db';
 
 afterAll(async () => {
-  await pool.end();
-  server.close();
+  await pool.end(); // Close the database pool
+  server.close(); // Ensure the server is closed
 });
 
 describe('User Routes Integration Tests', () => {
-  beforeEach(() => {
-    jest.spyOn(console, 'log').mockImplementation(() => {});
-    jest.spyOn(console, 'error').mockImplementation(() => {});
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
+  it('should check server status successfully', async () => {
+    const response = await request(app).get('/');
+    expect(response.status).toBe(200);
+    expect(response.text).toBe('Leaderboard API is running!');
   });
 
   it('should add a new user successfully', async () => {

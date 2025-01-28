@@ -3,6 +3,7 @@ import userRoutes from './routes/user.routes';
 import { errorHandler } from './middlewares/error.middleware';
 import { requestLogger } from './middlewares/logger.middleware';
 import { loggerService } from './services/logger.service';
+import { checkServerStatus } from './controllers/user.controller';
 
 const app = express();
 
@@ -11,6 +12,9 @@ app.use(express.json());
 
 // Middleware for logging incoming requests
 app.use(requestLogger);
+
+// Root route to check server status
+app.get('/', checkServerStatus);
 
 // Register user-related routes
 app.use('/api/users', userRoutes);

@@ -5,6 +5,7 @@ import {
   updateScore,
   getTopUsers,
   getUserWithNeighbors,
+  checkServerStatus,
 } from '../../src/controllers/user.controller';
 import { loggerService } from '../../src/services/logger.service';
 
@@ -19,8 +20,17 @@ describe('User Controller Unit Tests', () => {
     req = {};
     res = {
       status: jest.fn().mockReturnThis(),
+      send: jest.fn(),
       json: jest.fn(),
     };
+  });
+
+  it('should check server status successfully', async () => {
+    await checkServerStatus(req as Request, res as Response);
+
+    expect(loggerService.info).toHaveBeenCalledWith('Checking server status');
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.send).toHaveBeenCalledWith('Leaderboard API is running!');
   });
 
   it('should add a new user', async () => {

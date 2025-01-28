@@ -4,8 +4,9 @@
 	"description": "A scalable leaderboard system for gaming platforms, designed to handle a large user base with high performance and efficiency.",
 	"main": "server.ts",
 	"scripts": {
-		"start": "ts-node ./src/server.ts",
-		"test": "jest"
+		"start": "node dist/server.js",
+		"build": "tsc", 
+		"test": "jest --detectOpenHandles"
 	},
 	"author": "Ofir Gady",
 	"license": "ISC",
