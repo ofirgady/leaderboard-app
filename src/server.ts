@@ -4,9 +4,8 @@ import pool from './db'; // Import PostgreSQL connection
 const app = express();
 app.use(express.json()); // Middleware to parse JSON request bodies
 
-
 // Root route to check if the server is running
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
 	res.send('Leaderboard API is running!');
 });
 
@@ -15,10 +14,17 @@ app.post('/addUser', async (req, res) => {
 	const { username, score, img_url } = req.body;
 
 	try {
-		const result = await pool.query(
-			'INSERT INTO users (username, score, img_url) VALUES ($1, $2, $3) RETURNING *',
-			[username, score, img_url]
-		);
+		const result = img_url
+			? await pool.query(
+					`INSERT INTO users (username, score, img_url)
+           VALUES ($1, $2, $3) RETURNING *`,
+					[username, score, img_url]
+			  )
+			: await pool.query(
+					`INSERT INTO users (username, score)
+           VALUES ($1, $2) RETURNING *`,
+					[username, score]
+			  );
 
 		res.status(201).json(result.rows[0]);
 	} catch (error) {
@@ -26,7 +32,6 @@ app.post('/addUser', async (req, res) => {
 		res.status(500).send('Error adding user');
 	}
 });
-
 
 // PUT /updateScore/:id - Updates the score of a specific user
 app.put('/updateScore/:id', async (req, res) => {
@@ -50,7 +55,6 @@ app.put('/updateScore/:id', async (req, res) => {
 	}
 });
 
-
 // GET /getTopUsers/:limit - Retrieves the top N users sorted by score
 app.get('/getTopUsers/:limit', async (req, res) => {
 	const { limit } = req.params;
@@ -67,46 +71,38 @@ app.get('/getTopUsers/:limit', async (req, res) => {
 	}
 });
 
-
-// GET /getUserWithNeighbors/:id - Retrieves a user and 5 neighbors
+// GET /getUserWithNeighbors/:id - Retrieves a user and 2 neighbors
 app.get('/getUserWithNeighbors/:id', async (req, res) => {
 	const { id } = req.params;
 
 	try {
-		// Fetch the rank and neighbors for the user
-		const userQuery = `
-      SELECT id, username, score, RANK() OVER (ORDER BY score DESC) AS rank
-      FROM users
-      WHERE id = $1
+		// Use a CTE to calculate ranks for all users
+		const query = `
+      WITH ranked_users AS (
+        SELECT id, username, score, RANK() OVER (ORDER BY score DESC) AS rank
+        FROM users
+      )
+      SELECT * FROM ranked_users
+      WHERE rank BETWEEN (
+        SELECT rank - 2 FROM ranked_users WHERE id = $1
+      ) AND (
+        SELECT rank + 3 FROM ranked_users WHERE id = $1
+      )
+      ORDER BY rank;
     `;
-		const userResult = await pool.query(userQuery, [id]);
 
-		if (userResult.rows.length === 0) {
+		const result = await pool.query(query, [id]);
+
+		if (result.rows.length === 0) {
 			return res.status(404).send('User not found');
 		}
 
-		const user = userResult.rows[0];
-		const rank = user.rank;
-
-		// Fetch 5 users above and below the rank
-		const neighborsQuery = `
-      SELECT id, username, score, RANK() OVER (ORDER BY score DESC) AS rank
-      FROM users
-      WHERE ABS(RANK() OVER (ORDER BY score DESC) - $1) <= 5
-      ORDER BY rank
-    `;
-		const neighborsResult = await pool.query(neighborsQuery, [rank]);
-
-		res.status(200).json({
-			user,
-			neighbors: neighborsResult.rows,
-		});
+		res.status(200).json(result.rows);
 	} catch (error) {
 		console.error('Error fetching user and neighbors:', error);
 		res.status(500).send('Error fetching user and neighbors');
 	}
 });
-
 
 // Start the server
 const PORT = 3000;
