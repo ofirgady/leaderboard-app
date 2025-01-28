@@ -2,8 +2,12 @@ import { Request, Response } from 'express';
 import { userRepository } from '../repositories/user.repository';
 import { loggerService } from '../services/logger.service';
 
-// Add a new user
-export const addUser = async (req: Request, res: Response) => {
+/**
+ * Adds a new user to the database.
+ * @param req - Express request object, containing username, score, and optional img_url in the body.
+ * @param res - Express response object.
+ */
+export const addUser = async (req: Request, res: Response): Promise<void> => {
 	const { username, score, img_url } = req.body;
 
 	try {
@@ -16,8 +20,12 @@ export const addUser = async (req: Request, res: Response) => {
 	}
 };
 
-// Update a user's score
-export const updateScore = async (req: Request, res: Response) => {
+/**
+ * Updates a user's score.
+ * @param req - Express request object, containing user ID in params and score in the body.
+ * @param res - Express response object.
+ */
+export const updateScore = async (req: Request, res: Response): Promise<void> => {
 	const { id } = req.params;
 	const { score } = req.body;
 
@@ -26,7 +34,8 @@ export const updateScore = async (req: Request, res: Response) => {
 		const user = await userRepository.updateScore(Number(id), score);
 		if (!user) {
 			loggerService.warn('User not found for update', { id });
-			return res.status(404).json({ error: 'User not found' });
+			res.status(404).json({ error: 'User not found' });
+			return;
 		}
 		res.status(200).json(user);
 	} catch (error: any) {
@@ -35,8 +44,12 @@ export const updateScore = async (req: Request, res: Response) => {
 	}
 };
 
-// Get top N users
-export const getTopUsers = async (req: Request, res: Response) => {
+/**
+ * Retrieves the top N users sorted by score.
+ * @param req - Express request object, containing limit in params.
+ * @param res - Express response object.
+ */
+export const getTopUsers = async (req: Request, res: Response): Promise<void> => {
 	const { limit } = req.params;
 
 	try {
@@ -49,8 +62,12 @@ export const getTopUsers = async (req: Request, res: Response) => {
 	}
 };
 
-// Get a user and 5 neighbors
-export const getUserWithNeighbors = async (req: Request, res: Response) => {
+/**
+ * Retrieves a user and their 5 neighbors based on score.
+ * @param req - Express request object, containing user ID in params.
+ * @param res - Express response object.
+ */
+export const getUserWithNeighbors = async (req: Request, res: Response): Promise<void> => {
 	const { id } = req.params;
 
 	try {
@@ -58,7 +75,8 @@ export const getUserWithNeighbors = async (req: Request, res: Response) => {
 		const neighbors = await userRepository.getUserWithNeighbors(Number(id));
 		if (!neighbors || neighbors.length === 0) {
 			loggerService.warn('User not found for neighbors', { id });
-			return res.status(404).json({ error: 'User not found' });
+			res.status(404).json({ error: 'User not found' });
+			return;
 		}
 		res.status(200).json(neighbors);
 	} catch (error: any) {

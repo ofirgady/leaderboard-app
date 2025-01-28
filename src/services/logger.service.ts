@@ -3,35 +3,34 @@ import path from 'path';
 
 // Define the logger service
 export const loggerService = {
-  debug(...args: unknown[]) {
+  debug(...args: unknown[]): void {
     doLog('DEBUG', ...args);
   },
-  info(...args: unknown[]) {
+  info(...args: unknown[]): void {
     doLog('INFO', ...args);
   },
-  warn(...args: unknown[]) {
+  warn(...args: unknown[]): void {
     doLog('WARN', ...args);
   },
-  error(...args: unknown[]) {
+  error(...args: unknown[]): void {
     doLog('ERROR', ...args);
   },
 };
 
-// Directory for log files (use absolute path)
+// Directory for log files (absolute path)
 const logsDir = path.resolve(__dirname, '../logs');
 if (!fs.existsSync(logsDir)) {
   try {
-    fs.mkdirSync(logsDir, { recursive: true }); // Create directory if not exists
+    fs.mkdirSync(logsDir, { recursive: true });
     console.log(`Logs directory created at ${logsDir}`);
   } catch (err) {
     console.error('FATAL: Cannot create logs directory', err);
   }
 }
 
-// Function to get the current time in the desired format
+// Function to get the current time in ISO format
 function getTime(): string {
-  const now = new Date();
-  return now.toLocaleString('he');
+  return new Date().toISOString(); // ISO format for better compatibility
 }
 
 // Check if an argument is an Error object
@@ -41,26 +40,26 @@ function isError(e: unknown): e is Error {
 
 // Core logging function
 function doLog(level: string, ...args: unknown[]): void {
-    // Map arguments to strings or JSON
-    const strs = args.map(arg =>
-      typeof arg === 'string' || isError(arg) ? arg : JSON.stringify(arg)
-    );
-  
-    // Format the log line
-    const line = `${getTime()} - ${level} - ${strs.join(' | ')}\n`;
-  
-    // Print to console
-    if (level === 'ERROR') {
-      console.error(line); 
-    } else {
-      console.log(line);
-    }
-  
-    // Append to log file
-    const logFilePath = path.join(logsDir, 'backend.log');
-    fs.appendFile(logFilePath, line, (err) => {
-      if (err) {
-        console.error('FATAL: cannot write to log file', err); // גם כאן
-      }
-    });
+  // Map arguments to strings or JSON
+  const formattedArgs = args.map(arg =>
+    typeof arg === 'string' || isError(arg) ? arg : JSON.stringify(arg)
+  );
+
+  // Format the log line
+  const logLine = `${getTime()} - ${level} - ${formattedArgs.join(' | ')}\n`;
+
+  // Print to console
+  if (level === 'ERROR') {
+    console.error(logLine);
+  } else {
+    console.log(logLine);
   }
+
+  // Append to log file
+  const logFilePath = path.join(logsDir, 'backend.log');
+  fs.appendFile(logFilePath, logLine, (err) => {
+    if (err) {
+      console.error('FATAL: cannot write to log file', err);
+    }
+  });
+}
