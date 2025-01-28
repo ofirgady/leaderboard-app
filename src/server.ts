@@ -71,24 +71,24 @@ app.get('/getTopUsers/:limit', async (req, res) => {
 	}
 });
 
-// GET /getUserWithNeighbors/:id - Retrieves a user and 2 neighbors
+// GET /getUserWithNeighbors/:id - Retrieves a user and 5 neighbors
 app.get('/getUserWithNeighbors/:id', async (req, res) => {
 	const { id } = req.params;
 
 	try {
 		// Use a CTE to calculate ranks for all users
 		const query = `
-      WITH ranked_users AS (
-        SELECT id, username, score, RANK() OVER (ORDER BY score DESC) AS rank
-        FROM users
+        WITH ranked_users AS (
+          SELECT id, username, score, ROW_NUMBER() OVER (ORDER BY score DESC) AS rank_row
+          FROM users
       )
       SELECT * FROM ranked_users
-      WHERE rank BETWEEN (
-        SELECT rank - 2 FROM ranked_users WHERE id = $1
+      WHERE rank_row BETWEEN (
+        SELECT rank_row - 5 FROM ranked_users WHERE id = $1
       ) AND (
-        SELECT rank + 3 FROM ranked_users WHERE id = $1
+        SELECT rank_row + 5 FROM ranked_users WHERE id = $1
       )
-      ORDER BY rank;
+      ORDER BY rank_row;
     `;
 
 		const result = await pool.query(query, [id]);
