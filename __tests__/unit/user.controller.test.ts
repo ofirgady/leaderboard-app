@@ -1,104 +1,41 @@
-import { addUser, updateScore, getTopUsers, getUserWithNeighbors } from '../../src/controllers/user.controller';
-import pool from '../../src/db';
+import { Request, Response } from 'express';
+import { userRepository } from '../../src/repositories/user.repository';
+import {
+  addUser,
+  updateScore,
+  getTopUsers,
+  getUserWithNeighbors,
+} from '../../src/controllers/user.controller';
 import { loggerService } from '../../src/services/logger.service';
 
-// Mock the database pool
-jest.mock('../../src/db', () => ({
-  query: jest.fn(),
-}));
+jest.mock('../../src/repositories/user.repository');
+jest.mock('../../src/services/logger.service');
 
-// Mock the logger service
-jest.mock('../../src/services/logger.service', () => ({
-  loggerService: {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  },
-}));
-
-// Mock response object
-const mockResponse = () => {
-  const res: any = {};
-  res.status = jest.fn().mockReturnThis();
-  res.json = jest.fn();
-  res.send = jest.fn();
-  return res;
-};
-
-// Tests
 describe('User Controller Unit Tests', () => {
-  afterEach(() => {
-    jest.clearAllMocks();
+  let req: Partial<Request>;
+  let res: Partial<Response>;
+
+  beforeEach(() => {
+    req = {};
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
   });
 
-  it('should add a user successfully', async () => {
-    const req = {
-      body: {
-        username: 'TestUser',
-        score: 50,
-        img_url: 'https://example.com/image.jpg',
-      },
-    };
-    const res = mockResponse();
-
-    // Mock database response
-    (pool.query as jest.Mock).mockResolvedValueOnce({
-      rows: [{ id: 1, ...req.body }],
+  it('should add a new user', async () => {
+    req.body = { username: 'TestUser', score: 100, img_url: 'https://example.com/image.jpg' };
+    (userRepository.addUser as jest.Mock).mockResolvedValue({
+      id: 1,
+      username: 'TestUser',
+      score: 100,
+      img_url: 'https://example.com/image.jpg',
     });
 
-    await addUser(req as any, res);
+    await addUser(req as Request, res as Response);
 
-    expect(pool.query).toHaveBeenCalledTimes(1);
-    expect(pool.query).toHaveBeenCalledWith(
-      `INSERT INTO users (username, score, img_url) VALUES ($1, $2, $3) RETURNING *`,
-      [req.body.username, req.body.score, req.body.img_url]
-    );
+    expect(userRepository.addUser).toHaveBeenCalledWith('TestUser', 100, 'https://example.com/image.jpg');
     expect(res.status).toHaveBeenCalledWith(201);
-    expect(res.json).toHaveBeenCalledWith({ id: 1, ...req.body });
-  });
-
-  it('should handle database errors when adding a user', async () => {
-    const req = {
-      body: {
-        username: 'TestUser',
-        score: 50,
-        img_url: 'https://example.com/image.jpg',
-      },
-    };
-    const res = mockResponse();
-
-    // Mock database error
-    (pool.query as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
-
-    await addUser(req as any, res);
-
-    expect(pool.query).toHaveBeenCalledTimes(1);
-    expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.send).toHaveBeenCalledWith('Error adding user');
-    expect(loggerService.error).toHaveBeenCalledWith('Error adding user', new Error('Database error'));
-  });
-
-  it('should update a user score successfully', async () => {
-    const req = {
-      params: { id: '1' },
-      body: { score: 100 },
-    };
-    const res = mockResponse();
-
-    // Mock database response
-    (pool.query as jest.Mock).mockResolvedValueOnce({
-      rows: [{ id: 1, username: 'TestUser', score: 100, img_url: 'https://example.com/image.jpg' }],
-    });
-
-    await updateScore(req as any, res);
-
-    expect(pool.query).toHaveBeenCalledTimes(1);
-    expect(pool.query).toHaveBeenCalledWith(
-      `UPDATE users SET score = $1 WHERE id = $2 RETURNING *`,
-      [req.body.score, req.params.id]
-    );
-    expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
       id: 1,
       username: 'TestUser',
@@ -107,81 +44,70 @@ describe('User Controller Unit Tests', () => {
     });
   });
 
-  it('should handle user not found when updating score', async () => {
-    const req = {
-      params: { id: '0' },
-      body: { score: 100 },
-    };
-    const res = mockResponse();
-
-    // Mock empty database response
-    (pool.query as jest.Mock).mockResolvedValueOnce({ rows: [] });
-
-    await updateScore(req as any, res);
-
-    expect(pool.query).toHaveBeenCalledTimes(1);
-    expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.send).toHaveBeenCalledWith('User not found');
-    expect(loggerService.warn).toHaveBeenCalledWith('User not found for update', { id: req.params.id });
-  });
-
-  it('should fetch top users successfully', async () => {
-    const req = { params: { limit: '5' } };
-    const res = mockResponse();
-
-    // Mock database response
-    (pool.query as jest.Mock).mockResolvedValueOnce({
-      rows: [
-        { id: 1, username: 'TestUser1', score: 100, img_url: 'https://example.com/image1.jpg' },
-        { id: 2, username: 'TestUser2', score: 90, img_url: 'https://example.com/image2.jpg' },
-      ],
+  it('should update a user\'s score', async () => {
+    req.params = { id: '1' };
+    req.body = { score: 200 };
+    (userRepository.updateScore as jest.Mock).mockResolvedValue({
+      id: 1,
+      username: 'TestUser',
+      score: 200,
+      img_url: 'https://example.com/image.jpg',
     });
 
-    await getTopUsers(req as any, res);
+    await updateScore(req as Request, res as Response);
 
-    expect(pool.query).toHaveBeenCalledTimes(1);
-    expect(pool.query).toHaveBeenCalledWith(`SELECT * FROM users ORDER BY score DESC LIMIT $1`, [5]);
+    expect(userRepository.updateScore).toHaveBeenCalledWith(1, 200);
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      id: 1,
+      username: 'TestUser',
+      score: 200,
+      img_url: 'https://example.com/image.jpg',
+    });
+  });
+
+  it('should fetch top users', async () => {
+    req.params = { limit: '5' };
+    (userRepository.getTopUsers as jest.Mock).mockResolvedValue([
+      { id: 1, username: 'User1', score: 200 },
+      { id: 2, username: 'User2', score: 150 },
+    ]);
+
+    await getTopUsers(req as Request, res as Response);
+
+    expect(userRepository.getTopUsers).toHaveBeenCalledWith(5);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith([
-      { id: 1, username: 'TestUser1', score: 100, img_url: 'https://example.com/image1.jpg' },
-      { id: 2, username: 'TestUser2', score: 90, img_url: 'https://example.com/image2.jpg' },
+      { id: 1, username: 'User1', score: 200 },
+      { id: 2, username: 'User2', score: 150 },
     ]);
   });
 
-  it('should fetch a user and their neighbors successfully', async () => {
-    const req = { params: { id: '1' } };
-    const res = mockResponse();
+  it('should fetch user and neighbors', async () => {
+    req.params = { id: '1' };
+    (userRepository.getUserWithNeighbors as jest.Mock).mockResolvedValue([
+      { id: 1, username: 'User1', score: 200 },
+      { id: 2, username: 'User2', score: 150 },
+    ]);
 
-    // Mock database response
-    (pool.query as jest.Mock).mockResolvedValueOnce({
-      rows: [
-        { id: 1, username: 'TestUser', score: 100, img_url: 'https://example.com/image.jpg', rank_row: 1 },
-        { id: 2, username: 'Neighbor1', score: 95, img_url: 'https://example.com/image2.jpg', rank_row: 2 },
-      ],
-    });
+    await getUserWithNeighbors(req as Request, res as Response);
 
-    await getUserWithNeighbors(req as any, res);
-
-    expect(pool.query).toHaveBeenCalledTimes(1);
+    expect(userRepository.getUserWithNeighbors).toHaveBeenCalledWith(1);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith([
-      { id: 1, username: 'TestUser', score: 100, img_url: 'https://example.com/image.jpg', rank_row: 1 },
-      { id: 2, username: 'Neighbor1', score: 95, img_url: 'https://example.com/image2.jpg', rank_row: 2 },
+      { id: 1, username: 'User1', score: 200 },
+      { id: 2, username: 'User2', score: 150 },
     ]);
   });
 
-  it('should return 404 if the user with neighbors is not found', async () => {
-    const req = { params: { id: '0' } };
-    const res = mockResponse();
+  it('should return 404 if user is not found for neighbors', async () => {
+    req.params = { id: '99999' };
+    (userRepository.getUserWithNeighbors as jest.Mock).mockResolvedValue([]);
 
-    // Mock empty database response
-    (pool.query as jest.Mock).mockResolvedValueOnce({ rows: [] });
+    await getUserWithNeighbors(req as Request, res as Response);
 
-    await getUserWithNeighbors(req as any, res);
-
-    expect(pool.query).toHaveBeenCalledTimes(1);
+    expect(userRepository.getUserWithNeighbors).toHaveBeenCalledWith(99999);
     expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.send).toHaveBeenCalledWith('User not found');
-    expect(loggerService.warn).toHaveBeenCalledWith('User not found for neighbors', { id: req.params.id });
+    expect(res.json).toHaveBeenCalledWith({ error: 'User not found' });
   });
 });

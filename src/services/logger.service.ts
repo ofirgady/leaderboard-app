@@ -41,23 +41,26 @@ function isError(e: unknown): e is Error {
 
 // Core logging function
 function doLog(level: string, ...args: unknown[]): void {
-  // Map arguments to strings or JSON
-  const strs = args.map(arg =>
-    typeof arg === 'string' || isError(arg) ? arg : JSON.stringify(arg)
-  );
-
-  // Format the log line
-  let line = strs.join(' | ');
-  line = `${getTime()} - ${level} - ${line}\n`;
-
-  // Print to console
-  console.log(line);
-
-  // Append to log file
-  const logFilePath = path.join(logsDir, 'backend.log');
-  fs.appendFile(logFilePath, line, (err) => {
-    if (err) {
-      console.error('FATAL: cannot write to log file', err);
+    // Map arguments to strings or JSON
+    const strs = args.map(arg =>
+      typeof arg === 'string' || isError(arg) ? arg : JSON.stringify(arg)
+    );
+  
+    // Format the log line
+    const line = `${getTime()} - ${level} - ${strs.join(' | ')}\n`;
+  
+    // Print to console
+    if (level === 'ERROR') {
+      console.error(line); 
+    } else {
+      console.log(line);
     }
-  });
-}
+  
+    // Append to log file
+    const logFilePath = path.join(logsDir, 'backend.log');
+    fs.appendFile(logFilePath, line, (err) => {
+      if (err) {
+        console.error('FATAL: cannot write to log file', err); // גם כאן
+      }
+    });
+  }

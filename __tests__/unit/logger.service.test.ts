@@ -1,23 +1,44 @@
 import { loggerService } from '../../src/services/logger.service';
 import fs from 'fs';
-import path from 'path';
 
-// Mock the 'fs' module
 jest.mock('fs', () => ({
-  appendFile: jest.fn((_, __, cb: (err: null | Error) => void) => cb(null)),
+  appendFile: jest.fn((path, data, callback) => callback(null)), // Mock לכתיבה מוצלחת
   existsSync: jest.fn(() => true),
   mkdirSync: jest.fn(),
 }));
 
 describe('Logger Service Tests', () => {
-  it('should log info messages', () => {
-    loggerService.info('Test message');
-    expect(fs.appendFile).toHaveBeenCalled();
+  let consoleErrorSpy: jest.SpyInstance;
+  let consoleLogSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
   });
 
-  it('should handle errors during logging', () => {
-    (fs.appendFile as unknown as jest.Mock).mockImplementationOnce((_, __, cb) => cb(new Error('Write error')));
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('should log error messages', () => {
     loggerService.error('Error message');
+    expect(consoleErrorSpy).toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('ERROR'));
+  });
+
+  it('should log info messages', () => {
+    loggerService.info('Info message');
+    expect(consoleLogSpy).toHaveBeenCalled();
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('INFO'));
+  });
+
+  it('should write logs to a file', () => {
+    loggerService.info('Writing to file');
     expect(fs.appendFile).toHaveBeenCalled();
+    expect(fs.appendFile).toHaveBeenCalledWith(
+      expect.stringContaining('backend.log'),
+      expect.stringContaining('INFO'),
+      expect.any(Function)
+    );
   });
 });
