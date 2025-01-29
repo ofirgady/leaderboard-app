@@ -151,3 +151,4 @@ leaderboard-app/
 ## Author
 
 Developed by Ofir Gady. ￼
+
