@@ -1,0 +1,20 @@
+# Ignore node_modules to avoid installing unnecessary dependencies inside the container
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Ignore build artifacts
+dist
+
+# Ignore sensitive files
+# .env
+.DS_Store
+
+# Ignore local logs
+logs
+*.log
+
+# Ignore IDE and system files
+.vscode
+.idea
+*.swp

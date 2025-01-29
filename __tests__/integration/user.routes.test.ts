@@ -21,7 +21,7 @@ describe('User Routes Integration Tests', () => {
       img_url: 'https://example.com/test-image.jpg',
     };
 
-    const response = await request(app).post('/api/users/addUser').send(newUser);
+    const response = await request(app).post('/api/user/addUser').send(newUser);
 
     expect(response.status).toBe(201);
     expect(response.body).toHaveProperty('id');
@@ -34,7 +34,7 @@ describe('User Routes Integration Tests', () => {
     const userId = 1;
     const updatedScore = { score: 200 };
 
-    const response = await request(app).put(`/api/users/updateScore/${userId}`).send(updatedScore);
+    const response = await request(app).put(`/api/user/updateScore/${userId}`).send(updatedScore);
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('id', userId);
@@ -44,7 +44,7 @@ describe('User Routes Integration Tests', () => {
   it('should fetch top users successfully', async () => {
     const limit = 5;
 
-    const response = await request(app).get(`/api/users/getTopUsers/${limit}`);
+    const response = await request(app).get(`/api/user/getTopUsers/${limit}`);
 
     expect(response.status).toBe(200);
     expect(response.body.length).toBeLessThanOrEqual(limit);
@@ -55,7 +55,7 @@ describe('User Routes Integration Tests', () => {
   it('should fetch user and neighbors successfully', async () => {
     const userId = 1;
 
-    const response = await request(app).get(`/api/users/getUserWithNeighbors/${userId}`);
+    const response = await request(app).get(`/api/user/getUserWithNeighbors/${userId}`);
 
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Array);
@@ -65,7 +65,7 @@ describe('User Routes Integration Tests', () => {
   it('should return 404 if user does not exist', async () => {
     const nonExistentUserId = 99999;
 
-    const response = await request(app).get(`/api/users/getUserWithNeighbors/${nonExistentUserId}`);
+    const response = await request(app).get(`/api/user/getUserWithNeighbors/${nonExistentUserId}`);
 
     expect(response.status).toBe(404);
     expect(response.body.error).toBe('User not found');
@@ -74,7 +74,7 @@ describe('User Routes Integration Tests', () => {
   it('should return 400 if invalid user ID is provided for neighbors', async () => {
     const invalidUserId = 'abc';
 
-    const response = await request(app).get(`/api/users/getUserWithNeighbors/${invalidUserId}`);
+    const response = await request(app).get(`/api/user/getUserWithNeighbors/${invalidUserId}`);
 
     expect(response.status).toBe(400);
     expect(response.body.error).toBe('Validation Error');
@@ -84,7 +84,7 @@ describe('User Routes Integration Tests', () => {
     const userId = 1;
     const invalidScore = { score: -10 };
 
-    const response = await request(app).put(`/api/users/updateScore/${userId}`).send(invalidScore);
+    const response = await request(app).put(`/api/user/updateScore/${userId}`).send(invalidScore);
 
     expect(response.status).toBe(400);
     expect(response.body.error).toBe('Validation Error');

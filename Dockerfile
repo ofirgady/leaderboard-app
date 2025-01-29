@@ -1,18 +1,17 @@
-# Base Img
+# Base Image
 FROM node:22
 
 # Set the working directory inside the container
 WORKDIR /app
 
-# Copy only package.json and package-lock.json for caching
+# Copy only package.json and package-lock.json first for better caching
 COPY package*.json ./
 
 # Install Dependencies
 RUN npm install
 
 # Copy the rest of the application code
-COPY src/ ./src
-COPY tsconfig.json ./
+COPY . .
 
 # Build TypeScript code into JavaScript
 RUN npm run build

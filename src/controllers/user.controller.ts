@@ -11,11 +11,13 @@ export const checkServerStatus = async (req: Request, res: Response): Promise<vo
 	try {
 		loggerService.info('Checking server status');
 		res.status(200).send('Leaderboard API is running!');
+		loggerService.info('Server status checked successfully');
 	} catch (error: any) {
 		loggerService.error('Error checking server status', { error: error.message });
 		res.status(500).json({ error: 'Error checking server status' });
 	}
 };
+
 /**
  * Adds a new user to the database.
  * @param req - Express request object, containing username, score, and optional img_url in the body.
@@ -23,11 +25,11 @@ export const checkServerStatus = async (req: Request, res: Response): Promise<vo
  */
 export const addUser = async (req: Request, res: Response): Promise<void> => {
 	const { username, score, img_url } = req.body;
-
 	try {
 		loggerService.info('Adding a new user', { username, score });
 		const user = await userRepository.addUser(username, score, img_url);
 		res.status(201).json(user);
+		loggerService.info(`User ${username} was added successfully with ID: ${user.id}`);
 	} catch (error: any) {
 		loggerService.error('Error adding user', { error: error.message });
 		res.status(500).json({ error: 'Error adding user' });
@@ -52,6 +54,7 @@ export const updateScore = async (req: Request, res: Response): Promise<void> =>
 			return;
 		}
 		res.status(200).json(user);
+		loggerService.info(`User ${user.username} (ID: ${id}) score updated to ${score}`);
 	} catch (error: any) {
 		loggerService.error('Error updating user score', { error: error.message });
 		res.status(500).json({ error: 'Error updating user score' });
@@ -70,6 +73,7 @@ export const getTopUsers = async (req: Request, res: Response): Promise<void> =>
 		loggerService.info('Fetching top users', { limit });
 		const users = await userRepository.getTopUsers(Number(limit));
 		res.status(200).json(users);
+		loggerService.info(`Successfully fetched top ${limit} users`);
 	} catch (error: any) {
 		loggerService.error('Error fetching top users', { error: error.message });
 		res.status(500).json({ error: 'Error fetching top users' });
@@ -93,6 +97,7 @@ export const getUserWithNeighbors = async (req: Request, res: Response): Promise
 			return;
 		}
 		res.status(200).json(neighbors);
+		loggerService.info(`Successfully fetched user (ID: ${id}) and neighbors`);
 	} catch (error: any) {
 		loggerService.error('Error fetching user and neighbors', { error: error.message });
 		res.status(500).json({ error: 'Error fetching user and neighbors' });

@@ -15,7 +15,7 @@ const pool = new Pool({
 
 // Log successful connection
 pool.on('connect', () => {
-  loggerService.info('Connected to PostgreSQL database');
+  loggerService.info(`Connected to database: ${process.env.DB_NAME}`);
 });
 
 // Log disconnection or errors

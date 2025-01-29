@@ -17,7 +17,7 @@ app.use(requestLogger);
 app.get('/', checkServerStatus);
 
 // Register user-related routes
-app.use('/api/users', userRoutes);
+app.use('/api/user', userRoutes);
 
 // Middleware for handling errors globally
 app.use(errorHandler);

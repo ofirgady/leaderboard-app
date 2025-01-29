@@ -13,12 +13,12 @@ import {
 } from '../middlewares/validate.middleware';
 
 const router = Router();
-
+console.log('Hello from user.router')
 /**
  * Route to add a new user.
  * Validation middleware ensures input data is valid before proceeding.
  */
-router.post('/addUser', validateAddUser, addUser);
+router.post('/addUser',validateAddUser,addUser)
 
 /**
  * Route to update a user's score by ID.
