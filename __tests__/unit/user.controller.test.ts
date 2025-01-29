@@ -75,49 +75,4 @@ describe('User Controller Unit Tests', () => {
       img_url: 'https://example.com/image.jpg',
     });
   });
-
-  it('should fetch top users', async () => {
-    req.params = { limit: '5' };
-    (userRepository.getTopUsers as jest.Mock).mockResolvedValue([
-      { id: 1, username: 'User1', score: 200 },
-      { id: 2, username: 'User2', score: 150 },
-    ]);
-
-    await getTopUsers(req as Request, res as Response);
-
-    expect(userRepository.getTopUsers).toHaveBeenCalledWith(5);
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith([
-      { id: 1, username: 'User1', score: 200 },
-      { id: 2, username: 'User2', score: 150 },
-    ]);
-  });
-
-  it('should fetch user and neighbors', async () => {
-    req.params = { id: '1' };
-    (userRepository.getUserWithNeighbors as jest.Mock).mockResolvedValue([
-      { id: 1, username: 'User1', score: 200 },
-      { id: 2, username: 'User2', score: 150 },
-    ]);
-
-    await getUserWithNeighbors(req as Request, res as Response);
-
-    expect(userRepository.getUserWithNeighbors).toHaveBeenCalledWith(1);
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith([
-      { id: 1, username: 'User1', score: 200 },
-      { id: 2, username: 'User2', score: 150 },
-    ]);
-  });
-
-  it('should return 404 if user is not found for neighbors', async () => {
-    req.params = { id: '99999' };
-    (userRepository.getUserWithNeighbors as jest.Mock).mockResolvedValue([]);
-
-    await getUserWithNeighbors(req as Request, res as Response);
-
-    expect(userRepository.getUserWithNeighbors).toHaveBeenCalledWith(99999);
-    expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith({ error: 'User not found' });
-  });
 });

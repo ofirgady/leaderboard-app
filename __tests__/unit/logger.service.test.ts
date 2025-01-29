@@ -2,7 +2,7 @@ import { loggerService } from '../../src/services/logger.service';
 import fs from 'fs';
 
 jest.mock('fs', () => ({
-  appendFile: jest.fn((path, data, callback) => callback(null)), // Mock לכתיבה מוצלחת
+  appendFile: jest.fn((path, data, callback) => callback(null)), // Mock successful file writing
   existsSync: jest.fn(() => true),
   mkdirSync: jest.fn(),
 }));

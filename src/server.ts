@@ -4,6 +4,7 @@ import { errorHandler } from './middlewares/error.middleware';
 import { requestLogger } from './middlewares/logger.middleware';
 import { loggerService } from './services/logger.service';
 import { checkServerStatus } from './controllers/user.controller';
+import { userRepository } from './repositories/user.repository';
 
 const app = express();
 
@@ -25,9 +26,27 @@ app.use(errorHandler);
 // Define the port from environment variables or use default
 const PORT = process.env.PORT || 3000;
 
-// Start the server and log its status
-const server = app.listen(PORT, () => {
-  loggerService.info(`Server running on http://localhost:${PORT}`);
-});
+// Function to start the server
+const startServer = async () => {
+  try {
+    // Ensure indexes are created before starting the server
+    await userRepository.ensureIndexes();
+    loggerService.info('Indexes ensured successfully.');
+
+    // Start the server
+    const server = app.listen(PORT, () => {
+      loggerService.info(`Server running on http://localhost:${PORT}`);
+    });
+
+    return server;
+  } catch (error) {
+    const errorMessage = (error as Error).message;
+    loggerService.error('Error during server startup', { error: errorMessage });
+    process.exit(1); // Exit the process if there's an error
+  }
+};
+
+// Start the server
+const server = startServer();
 
 export { app, server };
