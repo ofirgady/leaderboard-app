@@ -7,7 +7,6 @@ yarn-error.log
 dist
 
 # Ignore sensitive files
-# .env
 .DS_Store
 
 # Ignore local logs
